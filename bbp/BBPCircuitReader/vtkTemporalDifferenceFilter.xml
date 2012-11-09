@@ -1,0 +1,94 @@
+<ServerManagerConfiguration>
+
+  <!-- ================================================================ -->
+  <!-- vtkTemporalDifferenceFilter                                    -->
+  <!-- ================================================================ -->
+
+  <ProxyGroup name="filters">
+
+    <SourceProxy name="TemporalDifferenceFilter"
+                 class="vtkTemporalDifferenceFilter"
+                 label="TemporalDifferenceFilter">
+      <Documentation
+         long_help="Computes the displacement or temporal derivative 
+         of a single mesh between two time steps for scalar/vector arrays"
+         short_help="Computes the time displacement or derivative">
+      </Documentation>
+
+      <InputProperty
+        name="Input"
+        command="SetInputConnection">
+        <ProxyGroupDomain name="groups">
+          <Group name="sources"/>
+          <Group name="filters"/>
+        </ProxyGroupDomain>
+        <DataTypeDomain name="input_type">
+          <DataType value="vtkPointSet"/>
+        </DataTypeDomain>
+      </InputProperty>
+
+      <IntVectorProperty
+        name="ComputeMagnitudes"
+        command="SetComputeMagnitudes"
+        number_of_elements="1"
+        animateable="1"
+        default_values="0" >
+        <BooleanDomain name="bool"/>
+        <Documentation>
+          Output the abs(value) of the differences
+        </Documentation>
+      </IntVectorProperty>
+
+      <IntVectorProperty
+         name="ComputeScalarDifferences"
+         command="SetComputeScalarDifferences"
+         number_of_elements="1"
+         animateable="1"
+         default_values="1" >
+        <BooleanDomain name="bool"/>
+        <Documentation>
+          Turn off the calculation of all field array differences to save memory
+        </Documentation>
+      </IntVectorProperty>
+
+      <IntVectorProperty
+         name="ComputeSpatialDifferences"
+         command="SetComputeSpatialDifferences"
+         number_of_elements="1"
+         animateable="1"
+         default_values="1" >
+        <BooleanDomain name="bool"/>
+        <Documentation>
+          Turn off the calculation of spatial differences to save memory
+        </Documentation>
+      </IntVectorProperty>
+
+      <IntVectorProperty
+        name="ComputeDerivative"
+        command="SetComputeDerivative"
+        number_of_elements="1"
+        animateable="1"
+        default_values="0" >
+        <BooleanDomain name="bool"/>
+        <Documentation>
+          Tells the filter to compute the derivative rather than the difference
+        </Documentation>
+      </IntVectorProperty>
+
+      <StringVectorProperty
+         name="ArrayNamePrefix"
+         command="SetArrayNamePrefix"
+         number_of_elements="1"
+         animateable="0"
+         default_values="delta_" >
+        <Documentation>
+          Add this prefix to all array names
+        </Documentation>
+      </StringVectorProperty>
+
+      <!-- End vtkTemporalDifferenceFilter -->
+    </SourceProxy>
+
+  </ProxyGroup>
+
+</ServerManagerConfiguration>
