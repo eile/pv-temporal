@@ -120,7 +120,7 @@ int vtkTemporalDifferenceFilter::RequestDataObject( vtkInformation*,
         {
         vtkDataObject* newOutput = input->NewInstance();
         info->Set(vtkDataObject::DATA_OBJECT(), newOutput);
-        newOutput->Delete();
+        newOutput->FastDelete();
         }
       }
     return 1;
@@ -414,7 +414,7 @@ vtkDataSet *vtkTemporalDifferenceFilter
       arrays[0]->GetNumberOfComponents(), arrays[0]->GetNumberOfTuples(), this->ArrayNamePrefix);
     }
   output->GetPointData()->AddArray(outarray);
-  outarray->Delete();
+  outarray->FastDelete();
 
   //
   // Loop over all pointdata 
@@ -453,7 +453,7 @@ vtkDataSet *vtkTemporalDifferenceFilter
         arrays[0]->GetNumberOfComponents(), arrays[0]->GetNumberOfTuples(), this->ArrayNamePrefix);
       }
     output->GetPointData()->AddArray(outarray);
-    outarray->Delete();
+    outarray->FastDelete();
     }
 
   //
@@ -493,7 +493,7 @@ vtkDataSet *vtkTemporalDifferenceFilter
         arrays[0]->GetNumberOfComponents(), arrays[0]->GetNumberOfTuples(), this->ArrayNamePrefix);
       }
     output->GetPointData()->AddArray(outarray);
-    outarray->Delete();
+    outarray->FastDelete();
     }
 
   if (in1->GetInformation()->Has(vtkDataObject::DATA_GEOMETRY_UNMODIFIED()) &&
@@ -553,7 +553,7 @@ int vtkTemporalDifferenceFilter::RequestData(
 
     outData = this->DifferenceDataSet(data0, data1, this->DeltaT);
     outInfo->Set(vtkDataObject::DATA_OBJECT(),outData);
-    outData->Delete();
+    outData->FastDelete();
   }
   // stamp this new dataset with a time key
   outData->GetInformation()->Set(vtkDataObject::DATA_TIME_STEP(),upTime);
