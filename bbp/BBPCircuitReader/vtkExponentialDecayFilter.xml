@@ -1,0 +1,84 @@
+<ServerManagerConfiguration>
+
+  <!-- ================================================================ -->
+  <!-- vtkExponentialDecayFilter                                    -->
+  <!-- ================================================================ -->
+
+  <ProxyGroup name="filters">
+
+    <SourceProxy name="ExponentialDecayFilter"
+                 class="vtkExponentialDecayFilter"
+                 label="ExponentialDecayFilter">
+      <Documentation
+         long_help="Computes the displacement or temporal derivative 
+         of a single mesh between two time steps for scalar/vector arrays"
+         short_help="Computes the time displacement or derivative">
+      </Documentation>
+
+      <InputProperty
+        name="Input"
+        command="SetInputConnection">
+        <ProxyGroupDomain name="groups">
+          <Group name="sources"/>
+          <Group name="filters"/>
+        </ProxyGroupDomain>
+        <DataTypeDomain name="input_type">
+          <DataType value="vtkPointSet"/>
+        </DataTypeDomain>
+        <InputArrayDomain name="input_array" attribute_type="point" />
+        <!--                  number_of_components="3"/> -->
+      </InputProperty>
+
+      <DoubleVectorProperty
+        name="DecayFactor"
+        command="SetDecayFactor"
+        number_of_elements="1"
+        animateable="1"
+        default_values="25" >
+        <DoubleRangeDomain name="range" min="0" />
+        <Documentation>
+          Large gives a slow decay, small a fast one
+        </Documentation>
+      </DoubleVectorProperty>
+
+      <StringVectorProperty
+         name="ArrayNamePrefix"
+         command="SetArrayNamePrefix"
+         number_of_elements="1"
+         animateable="0"
+         default_values="exp_" >
+        <Documentation>
+          Add this prefix to all array names
+        </Documentation>
+      </StringVectorProperty>
+
+      <StringVectorProperty
+         name="PointArrayInfo"
+         information_only="1">
+        <ArraySelectionInformationHelper attribute_name="Point" />
+      </StringVectorProperty>
+
+      <StringVectorProperty
+         name="PointArrayStatus"
+         command="SetPointArrayStatus"
+                            information_property="PointArrayInfo"
+         default_values ="0"
+         number_of_elements="0"
+         repeat_command="1"
+         number_of_elements_per_command="2"
+         element_types="2 0"
+         label="Arrays to process">
+        <ArraySelectionDomain name="array_list">
+          <RequiredProperties>
+            <Property function="ArrayList"
+                      name="PointArrayInfo" />
+          </RequiredProperties>
+        </ArraySelectionDomain>
+      </StringVectorProperty>
+      
+      <!-- End vtkExponentialDecayFilter -->
+    </SourceProxy>
+
+  </ProxyGroup>
+
+</ServerManagerConfiguration>
