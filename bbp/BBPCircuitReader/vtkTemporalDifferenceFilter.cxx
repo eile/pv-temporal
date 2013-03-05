@@ -1,23 +1,23 @@
 /*=========================================================================
 
-  Program:   Visualization Toolkit
-  Module:    $RCSfile: vtkTemporalDifferenceFilter.cxx,v $
+Program:   Visualization Toolkit
+Module:    $RCSfile: vtkTemporalDifferenceFilter.cxx,v $
 
-  Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
-  All rights reserved.
-  See Copyright.txt or http://www.kitware.com/Copyright.htm for details.
+Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
+All rights reserved.
+See Copyright.txt or http://www.kitware.com/Copyright.htm for details.
 
-     This software is distributed WITHOUT ANY WARRANTY; without even
-     the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-     PURPOSE.  See the above copyright notice for more information.
+This software is distributed WITHOUT ANY WARRANTY; without even
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
 /*
 
-  The Custom particle interpolator currently only works with the modified
-  time pipeline which is a work in progress in the pv-meshless branch of paraview.
+The Custom particle interpolator currently only works with the modified
+time pipeline which is a work in progress in the pv-meshless branch of paraview.
 
-  This filter will not produce any output when compiled against the standard paraview
+This filter will not produce any output when compiled against the standard paraview
 
 */
 
@@ -41,6 +41,7 @@
 #include "vtkCellArray.h"
 #include "vtkPolyData.h"
 #include "vtkUnstructuredGrid.h"
+#include "vtkDataArraySelection.h"
 
 #include <vector>
 #include <algorithm>
@@ -52,7 +53,6 @@ vtkStandardNewMacro(vtkTemporalDifferenceFilter);
 vtkTemporalDifferenceFilter::vtkTemporalDifferenceFilter()
 {
   this->ComputeDerivative         = 0;
-  this->ComputeScalarDifferences  = 1;
   this->ComputeSpatialDifferences = 1;
   this->ComputeMagnitudes         = 0;
   this->ArrayNamePrefix           = NULL;
@@ -61,6 +61,7 @@ vtkTemporalDifferenceFilter::vtkTemporalDifferenceFilter()
   this->LastUpdateTime            = 0.0;
   this->SetNumberOfInputPorts(1);
   this->SetNumberOfOutputPorts(1);
+  this->PointDataArraySelection   = vtkSmartPointer<vtkDataArraySelection>::New();
 }
 //----------------------------------------------------------------------------
 vtkTemporalDifferenceFilter::~vtkTemporalDifferenceFilter()
@@ -93,38 +94,38 @@ int vtkTemporalDifferenceFilter::FillOutputPortInformation(int vtkNotUsed(port),
 }
 //----------------------------------------------------------------------------
 int vtkTemporalDifferenceFilter::RequestDataObject( vtkInformation*,
-                                             vtkInformationVector** inputVector ,
-                                             vtkInformationVector* outputVector)
+                                                   vtkInformationVector** inputVector ,
+                                                   vtkInformationVector* outputVector)
 {
   if (this->GetNumberOfInputPorts() == 0 || this->GetNumberOfOutputPorts() == 0)
-    {
+  {
     return 1;
-    }
+  }
 
   vtkInformation* inInfo = inputVector[0]->GetInformationObject(0);
   if (!inInfo)
-    {
+  {
     return 0;
-    }
+  }
   vtkDataObject *input = inInfo->Get(vtkDataObject::DATA_OBJECT());
 
   if (input)
-    {
+  {
     // for each output
     for(int i=0; i < this->GetNumberOfOutputPorts(); ++i)
-      {
+    {
       vtkInformation* info = outputVector->GetInformationObject(i);
       vtkDataObject *output = info->Get(vtkDataObject::DATA_OBJECT());
 
       if (!output || !output->IsA(input->GetClassName()))
-        {
+      {
         vtkDataObject* newOutput = input->NewInstance();
         info->Set(vtkDataObject::DATA_OBJECT(), newOutput);
         newOutput->FastDelete();
-        }
       }
-    return 1;
     }
+    return 1;
+  }
   return 0;
 }
 //----------------------------------------------------------------------------
@@ -139,7 +140,7 @@ int vtkTemporalDifferenceFilter::RequestUpdateExtent (
 
   // find the required input time steps and request them
   if (outInfo->Has(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()))
-    {
+  {
     // get the update times
     double upTime =  outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
 
@@ -151,7 +152,7 @@ int vtkTemporalDifferenceFilter::RequestUpdateExtent (
 
     // only if the input is not continuous should we do anything
     if (inTimes)
-      {
+    {
       //compute request times f
       double inUpTimes[2];
       int numInUpTimes(0);
@@ -160,29 +161,29 @@ int vtkTemporalDifferenceFilter::RequestUpdateExtent (
       numInUpTimes= 0;
       // below the range
       if (upTime <= inTimes[0])
-        {
+      {
         inUpTimes[numInUpTimes++] = inTimes[0];
-        }
+      }
       // above the range?
       else if (upTime >= inTimes[numInTimes-1])
-        {
+      {
         inUpTimes[numInUpTimes++] = inTimes[numInTimes-1];
-        }
+      }
       // in the middle
       else
-        {
+      {
         int i = 0;
         while (upTime > inTimes[i])
-          {
+        {
           ++i;
-          }
+        }
         inUpTimes[numInUpTimes++] = inTimes[i-1];
         inUpTimes[numInUpTimes++] = inTimes[i];
-        }
+      }
 
       inInfo->Set(vtkMultiTimeStepAlgorithm::UPDATE_TIME_STEPS(), inUpTimes,numInUpTimes);
-      }
     }
+  }
   return 1;
 }
 //----------------------------------------------------------------------------
@@ -204,7 +205,7 @@ int vtkTemporalDifferenceFilter::RequestInformation (
   double  outRange[2];
 
   if (inInfo->Has(vtkStreamingDemandDrivenPipeline::TIME_STEPS()))
-    {
+  {
     inTimes =
       inInfo->Get(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
     numTimes =
@@ -213,20 +214,39 @@ int vtkTemporalDifferenceFilter::RequestInformation (
     outRange[0] = inTimes[0];
     outRange[1] = inTimes[numTimes-1];
     outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_RANGE(),
-                 outRange,2);
-    }
+      outRange,2);
+  }
 
   // If the time source is a traditional file reader or other, then it declares times in information
   // but if it is a live object such as a simulation, then we must explicityl cache the last time step
   // in order to compute differences
   if (numTimes>1) 
-    {
+  {
     this->ExplicitTimeStepCaching = 0;
     this->LastTimeStep = NULL;
-    }
+  }
   else {
     this->ExplicitTimeStepCaching = 1;
   }
+
+  vtkDataSet *inData = vtkDataSet::SafeDownCast(inInfo->Get(vtkDataObject::DATA_OBJECT()));
+  vtkPointData *pd = inData->GetPointData();
+  //
+  // when information is regenreated, the arrays might change (bah!)
+  //
+  vtkSmartPointer<vtkDataArraySelection> TempArraySelection = vtkSmartPointer<vtkDataArraySelection>::New();
+  for (int i=0; i<pd->GetNumberOfArrays(); i++) {
+    const char *name = pd->GetArray(i)->GetName();
+    TempArraySelection->AddArray(name);
+    if (this->PointDataArraySelection->ArrayIsEnabled(name)) {
+      TempArraySelection->EnableArray(name);
+    }
+    else {
+      TempArraySelection->DisableArray(name);
+    }
+  }
+  this->PointDataArraySelection = TempArraySelection;
+
   return 1;
 }
 //----------------------------------------------------------------------------
@@ -236,11 +256,11 @@ public:
   vtkTemporalDifferenceToleranceCheck(double tol) { this->tolerance = tol; }
   double tolerance;
   //
-    result_type operator()(first_argument_type a, second_argument_type b) const
-    {
-      bool result = (fabs(a-b)<=(this->tolerance));
-      return (result_type)result;
-    }
+  result_type operator()(first_argument_type a, second_argument_type b) const
+  {
+    bool result = (fabs(a-b)<=(this->tolerance));
+    return (result_type)result;
+  }
 };
 //----------------------------------------------------------------------------
 int vtkTemporalDifferenceFilter::ComputeInputUpdateExtent (
@@ -265,7 +285,7 @@ int vtkTemporalDifferenceFilter::ComputeInputUpdateExtent (
       this->TimeStepValues.begin(), this->TimeStepValues.end(),
       std::bind2nd( vtkTemporalDifferenceToleranceCheck( this->TimeStepTolerance ), requestedTimeValue ))
       - this->TimeStepValues.begin();
-    
+
     // We need this time step and the previous one ...
     if (timestep>0) {
       inInfo->Set(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP(), this->TimeStepValues[timestep-1]);
@@ -280,11 +300,11 @@ int vtkTemporalDifferenceFilter::ComputeInputUpdateExtent (
 // templated difference function
 template <class T>
 void vtkTemporalDifferencedVdt(vtkTemporalDifferenceFilter *tdf,
-                                    double dt,
-                                    vtkDataArray *output,
-                                    vtkDataArray **arrays,
-                                    vtkIdType numComp,                                    
-                                    T *)
+                               double dt,
+                               vtkDataArray *output,
+                               vtkDataArray **arrays,
+                               vtkIdType numComp,                                    
+                               T *)
 {
   T *outData = static_cast<T*>(output->GetVoidPointer(0));
   T *inData0 = static_cast<T*>(arrays[0]->GetVoidPointer(0));
@@ -296,9 +316,9 @@ void vtkTemporalDifferencedVdt(vtkTemporalDifferenceFilter *tdf,
     T *x0 = &inData0[t*numComp];
     T *x1 = &inData1[t*numComp];
     if (!tdf->GetComputeMagnitudes()) {
-      for (int c=0; c<numComp; ++c)
-        *outData++ = static_cast<T>((x1[c]-x0[c])/dt);
-    }
+        for (int c=0; c<numComp; ++c)
+          *outData++ = static_cast<T>((x1[c]-x0[c])/dt);
+      }
     else {
       for (int c=0; c<numComp; ++c)
         *outData++ = static_cast<T>(std::abs((x1[c]-x0[c])/dt));
@@ -321,7 +341,7 @@ void vtkTemporalDifferenceZero(vtkDataArray *output,
   }
 }
 //----------------------------------------------------------------------------
-vtkDataArray *NewArray(vtkDataArray *da, vtkIdType Nc, vtkIdType Nt, const char *prefix)
+vtkDataArray *vtkTDFNewArray(vtkDataArray *da, vtkIdType Nc, vtkIdType Nt, const char *prefix)
 {
   //
   // Create the array
@@ -343,44 +363,42 @@ vtkDataArray *ZeroDataArray(vtkDataArray *da, vtkIdType Nc, vtkIdType Nt, const 
   //
   // Create the output array
   //
-  vtkDataArray *output = NewArray(da, Nc, Nt, prefix);
+  vtkDataArray *output = vtkTDFNewArray(da, Nc, Nt, prefix);
 
   // now do the interpolation
   switch (da->GetDataType())
-    {
+  {
     vtkTemplateMacro(vtkTemporalDifferenceZero
       (output, Nc, Nt, static_cast<VTK_TT *>(0)));
-    default:
-      return 0;
-    }
+  default:
+    return 0;
+  }
 
   return output;
 }
 //----------------------------------------------------------------------------
-vtkDataArray *vtkTemporalDifferenceFilter
-::DifferenceDataArray(double dt, vtkDataArray **arrays, vtkIdType Nt)
+vtkDataArray *vtkTemporalDifferenceFilter::DifferenceDataArray(double dt, vtkDataArray **arrays, vtkIdType Nt)
 {
   //
   // Create the output array
   //
   int Nc = arrays[0]->GetNumberOfComponents();
-  vtkDataArray *output = NewArray(arrays[0], Nc, Nt, this->ArrayNamePrefix);
+  vtkDataArray *output = vtkTDFNewArray(arrays[0], Nc, Nt, this->ArrayNamePrefix);
 
   // now do the interpolation
   switch (arrays[0]->GetDataType())
-    {
+  {
     vtkTemplateMacro(vtkTemporalDifferencedVdt
       (this, dt, output, arrays, Nc, static_cast<VTK_TT *>(0)));
-    default:
-      vtkErrorMacro(<< "Execute: Unknown ScalarType");
-      return 0;
-    }
+  default:
+    vtkErrorMacro(<< "Execute: Unknown ScalarType");
+    return 0;
+  }
 
   return output;
 }
 //----------------------------------------------------------------------------
-vtkDataSet *vtkTemporalDifferenceFilter
-::DifferenceDataSet(vtkDataSet *in1, vtkDataSet *in2, double dt)
+vtkDataSet *vtkTemporalDifferenceFilter::DifferenceDataSet(vtkDataSet *in1, vtkDataSet *in2, double dt)
 {
   vtkDataSet *input[2] = { in1, in2 };
 
@@ -395,112 +413,98 @@ vtkDataSet *vtkTemporalDifferenceFilter
   std::vector<vtkDataArray*> arrays;
   vtkDataArray *outarray;
   //
-  vtkPointSet *inPointSet[2] = {
-    vtkPointSet::SafeDownCast(input[0]), vtkPointSet::SafeDownCast(input[1]) };
-  for (int i=0; i<2; ++i) 
-    {
-    if (inPointSet[i]) 
-      {
-      arrays.push_back(inPointSet[i]->GetPoints()->GetData());
+  if (this->ComputeSpatialDifferences) {
+    vtkPointSet *inPointSet[2] = { vtkPointSet::SafeDownCast(input[0]), vtkPointSet::SafeDownCast(input[1]) };
+    for (int i=0; i<2; ++i) {
+      if (inPointSet[i]) {
+        arrays.push_back(inPointSet[i]->GetPoints()->GetData());
       }
     }
-  if (arrays.size()>1) 
-    {
-    outarray = this->DifferenceDataArray(dt, &arrays[0], arrays[0]->GetNumberOfTuples());
+    if (arrays.size()>1) {
+      outarray = this->DifferenceDataArray(dt, &arrays[0], arrays[0]->GetNumberOfTuples());
     }
-  else 
-    {
-    outarray = ZeroDataArray(arrays[0], 
-      arrays[0]->GetNumberOfComponents(), arrays[0]->GetNumberOfTuples(), this->ArrayNamePrefix);
+    else {
+      outarray = ZeroDataArray(arrays[0], 
+        arrays[0]->GetNumberOfComponents(), arrays[0]->GetNumberOfTuples(), this->ArrayNamePrefix);
     }
-  output->GetPointData()->AddArray(outarray);
-  outarray->FastDelete();
-
+    output->GetPointData()->AddArray(outarray);
+    outarray->FastDelete();
+  }
   //
   // Loop over all pointdata 
   //
-  for (int s=0; s<input[0]->GetPointData()->GetNumberOfArrays(); ++s) 
-    {
+  for (int s=0; s<input[0]->GetPointData()->GetNumberOfArrays(); ++s) {
     arrays.clear();
-    char *scalarname = NULL;
-    for (int i=0; i<2; ++i) 
-      {
-      //
-      // On some data, the scalar arrays are consistent but ordered
-      // differently on each time step, so we will fetch them by name if
-      // possible.
-      //
-      if (i==0 || (scalarname==NULL)) 
-        {
-        vtkDataArray *dataarray = input[i]->GetPointData()->GetArray(s);
-        scalarname = dataarray->GetName();
+    //
+    // On some data, the scalar arrays are consistent but ordered
+    // differently on each time step, so we will fetch them by name if
+    // possible.
+    //
+    vtkDataArray *dataarray = input[0]->GetPointData()->GetArray(s);
+    char *scalarname = dataarray->GetName();
+    if (this->GetPointArrayStatus(scalarname)) {
+      arrays.push_back(dataarray);
+      if (input[1] && this->GetPointArrayStatus(scalarname)) {
+        vtkDataArray *dataarray = input[1]->GetPointData()->GetArray(scalarname);
         arrays.push_back(dataarray);
-        }
-      else if (input[i])
-        {
-        vtkDataArray *dataarray = 
-          input[i]->GetPointData()->GetArray(scalarname);
-        arrays.push_back(dataarray);
-        }
       }
-    if (arrays.size()>1) 
-      {
-      outarray = this->DifferenceDataArray(dt, &arrays[0], arrays[0]->GetNumberOfTuples());
+      if (arrays.size()>1) {
+        outarray = this->DifferenceDataArray(dt, &arrays[0], arrays[0]->GetNumberOfTuples());
       }
-    else 
-      {
-      outarray = ZeroDataArray(arrays[0], 
-        arrays[0]->GetNumberOfComponents(), arrays[0]->GetNumberOfTuples(), this->ArrayNamePrefix);
+      else {
+        outarray = ZeroDataArray(arrays[0], 
+          arrays[0]->GetNumberOfComponents(), arrays[0]->GetNumberOfTuples(), this->ArrayNamePrefix);
       }
-    output->GetPointData()->AddArray(outarray);
-    outarray->FastDelete();
+      output->GetPointData()->AddArray(outarray);
+      outarray->FastDelete();
     }
+  }
 
   //
   // Interpolate celldata if present
   //
   for (int s=0; s<input[0]->GetCellData()->GetNumberOfArrays(); ++s) 
-    {
+  {
     arrays.clear();
     char *scalarname = NULL;
     for (int i=0; i<2; ++i) 
-      {
+    {
       //
       // On some data, the scalar arrays are consistent but ordered
       // differently on each time step, so we will fetch them by name if
       // possible.
       //
       if (i==0 || (scalarname==NULL)) 
-        {
+      {
         vtkDataArray *dataarray = input[i]->GetCellData()->GetArray(s);
         scalarname = dataarray->GetName();
         arrays.push_back(dataarray);
-        }
+      }
       else if (input[i])
-        {
+      {
         vtkDataArray *dataarray = 
           input[i]->GetCellData()->GetArray(scalarname);
         arrays.push_back(dataarray);
-        }
       }
+    }
     if (arrays.size()>1) 
-      {
+    {
       outarray = this->DifferenceDataArray(dt, &arrays[0], arrays[0]->GetNumberOfTuples());
-      }
+    }
     else 
-      {
+    {
       outarray = ZeroDataArray(arrays[0], 
         arrays[0]->GetNumberOfComponents(), arrays[0]->GetNumberOfTuples(), this->ArrayNamePrefix);
-      }
+    }
     output->GetPointData()->AddArray(outarray);
     outarray->FastDelete();
-    }
+  }
 
   if (in1->GetInformation()->Has(vtkDataObject::DATA_GEOMETRY_UNMODIFIED()) &&
-      in2->GetInformation()->Has(vtkDataObject::DATA_GEOMETRY_UNMODIFIED()))
-    {
+    in2->GetInformation()->Has(vtkDataObject::DATA_GEOMETRY_UNMODIFIED()))
+  {
     output->GetInformation()->Set(vtkDataObject::DATA_GEOMETRY_UNMODIFIED(),1);
-    }
+  }
   return output;
 }
 //----------------------------------------------------------------------------
@@ -521,24 +525,26 @@ int vtkTemporalDifferenceFilter::RequestData(
   int numTimeSteps  = inData->GetNumberOfBlocks();
 
   if (numTimeSteps==1)
+  {
+    vtkDataSet* data0 = vtkDataSet::SafeDownCast(inData->GetBlock(0));
+    // Do a diff, with a NULL second dataset to create the correct delta_ arrays
+    outData = this->DifferenceDataSet(data0, NULL, 0.0);
+
+    if (data0->GetInformation()->Has(vtkDataObject::DATA_GEOMETRY_UNMODIFIED()))
     {
-    // just pass the lowest data
-    outData = vtkDataSet::SafeDownCast(inData->GetBlock(0));
-    if (outData->GetInformation()->Has(vtkDataObject::DATA_GEOMETRY_UNMODIFIED()))
-      {
       outData->GetInformation()->Set(vtkDataObject::DATA_GEOMETRY_UNMODIFIED(),1);
-      }
-    outInfo->Set(vtkDataObject::DATA_OBJECT(),outData);
     }
+    outInfo->Set(vtkDataObject::DATA_OBJECT(),outData);
+  }
   else
-    {
+  {
     vtkDataSet* data0 = vtkDataSet::SafeDownCast(inData->GetBlock(0));
     vtkDataSet* data1 = vtkDataSet::SafeDownCast(inData->GetBlock(1));
     if (data0==NULL && data1==NULL)
-      {
+    {
       vtkErrorMacro("Null data set");
       return 0;
-      }
+    }
     // interpolate i-1 and i
     double t0 = data0->GetInformation()->Get(vtkDataObject::DATA_TIME_STEP());
     double t1 = data1->GetInformation()->Get(vtkDataObject::DATA_TIME_STEP());
@@ -560,4 +566,36 @@ int vtkTemporalDifferenceFilter::RequestData(
   //
   this->LastUpdateTime = upTime;
   return 1;
+}
+//----------------------------------------------------------------------------
+int vtkTemporalDifferenceFilter::GetNumberOfPointArrays()
+{
+  return this->PointDataArraySelection->GetNumberOfArrays();
+}
+//----------------------------------------------------------------------------
+const char* vtkTemporalDifferenceFilter::GetPointArrayName(int index)
+{
+  return this->PointDataArraySelection->GetArrayName(index);
+}
+//----------------------------------------------------------------------------
+int vtkTemporalDifferenceFilter::GetPointArrayStatus(const char* name)
+{
+  return this->PointDataArraySelection->ArrayIsEnabled(name);
+}
+//----------------------------------------------------------------------------
+void vtkTemporalDifferenceFilter::SetPointArrayStatus(const char* name, int status)
+{
+  if (status!=this->GetPointArrayStatus(name))
+  {
+    //    this->MeshParamsModifiedTime.Modified();
+    if (status)
+    {
+      this->PointDataArraySelection->EnableArray(name);
+    }
+    else
+    {
+      this->PointDataArraySelection->DisableArray(name);
+    }
+    this->Modified();
+  }
 }

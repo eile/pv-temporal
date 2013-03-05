@@ -25,6 +25,8 @@
         <DataTypeDomain name="input_type">
           <DataType value="vtkPointSet"/>
         </DataTypeDomain>
+        <InputArrayDomain name="input_array" attribute_type="point" />
+        <!--                  number_of_components="3"/> -->
       </InputProperty>
 
       <IntVectorProperty
@@ -40,23 +42,11 @@
       </IntVectorProperty>
 
       <IntVectorProperty
-         name="ComputeScalarDifferences"
-         command="SetComputeScalarDifferences"
-         number_of_elements="1"
-         animateable="1"
-         default_values="1" >
-        <BooleanDomain name="bool"/>
-        <Documentation>
-          Turn off the calculation of all field array differences to save memory
-        </Documentation>
-      </IntVectorProperty>
-
-      <IntVectorProperty
          name="ComputeSpatialDifferences"
          command="SetComputeSpatialDifferences"
          number_of_elements="1"
          animateable="1"
-         default_values="1" >
+         default_values="0" >
         <BooleanDomain name="bool"/>
         <Documentation>
           Turn off the calculation of spatial differences to save memory
@@ -68,7 +58,7 @@
         command="SetComputeDerivative"
         number_of_elements="1"
         animateable="1"
-        default_values="0" >
+        default_values="1" >
         <BooleanDomain name="bool"/>
         <Documentation>
           Tells the filter to compute the derivative rather than the difference
@@ -84,6 +74,30 @@
         <Documentation>
           Add this prefix to all array names
         </Documentation>
+      </StringVectorProperty>
+
+      <StringVectorProperty
+         name="PointArrayInfo"
+         information_only="1">
+        <ArraySelectionInformationHelper attribute_name="Point" />
+      </StringVectorProperty>
+
+      <StringVectorProperty
+         name="PointArrayStatus"
+         command="SetPointArrayStatus"
+                            information_property="PointArrayInfo"
+         default_values ="0"
+         number_of_elements="0"
+         repeat_command="1"
+         number_of_elements_per_command="2"
+         element_types="2 0"
+         label="Arrays to process">
+        <ArraySelectionDomain name="array_list">
+          <RequiredProperties>
+            <Property function="ArrayList"
+                      name="PointArrayInfo" />
+          </RequiredProperties>
+        </ArraySelectionDomain>
       </StringVectorProperty>
 
       <!-- End vtkTemporalDifferenceFilter -->

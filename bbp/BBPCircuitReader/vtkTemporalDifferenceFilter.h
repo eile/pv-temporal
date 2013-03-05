@@ -27,6 +27,7 @@
 #include <vector>     // required
 
 class vtkDataSet;
+class vtkDataArraySelection;
 
 class VTK_EXPORT vtkTemporalDifferenceFilter : public vtkMultiTimeStepAlgorithm
 {
@@ -41,11 +42,6 @@ public:
   vtkBooleanMacro(ComputeMagnitudes, int);
 
   // Description:
-  vtkSetMacro(ComputeScalarDifferences, int);
-  vtkGetMacro(ComputeScalarDifferences, int);
-  vtkBooleanMacro(ComputeScalarDifferences, int);
-
-  // Description:
   vtkSetMacro(ComputeSpatialDifferences, int);
   vtkGetMacro(ComputeSpatialDifferences, int);
   vtkBooleanMacro(ComputeSpatialDifferences, int);
@@ -58,6 +54,22 @@ public:
   // Description:
   vtkSetStringMacro(ArrayNamePrefix);
   vtkGetStringMacro(ArrayNamePrefix); 
+
+  // Description:
+  // Get the number of point or cell arrays available in the input.
+  int GetNumberOfPointArrays();
+
+  // Description:
+  // Get the name of the point or cell array with the given index in
+  // the input.
+  const char* GetPointArrayName(int index);
+
+  // Description:
+  // Get/Set whether the point or cell array with the given name is to
+  // be read.
+  int GetPointArrayStatus(const char* name);
+
+  void SetPointArrayStatus(const char* name, int status);
 
 protected:
    vtkTemporalDifferenceFilter();
@@ -98,7 +110,6 @@ protected:
 
   // internal variables
   int    ComputeMagnitudes;
-  int    ComputeScalarDifferences;
   int    ComputeSpatialDifferences;
   int    ComputeDerivative;
   char  *ArrayNamePrefix;
@@ -108,9 +119,12 @@ protected:
   int    ExplicitTimeStepCaching;
   double LastUpdateTime;
   //BTX
-  std::vector<double>      TimeStepValues;
+  std::vector<double>         TimeStepValues;
   vtkSmartPointer<vtkDataSet> LastTimeStep;
   //ETX
+
+  // To allow paraview gui to enable/disable scalars
+  vtkSmartPointer<vtkDataArraySelection> PointDataArraySelection;
 
 private:
   vtkTemporalDifferenceFilter(const vtkTemporalDifferenceFilter&);  // Not implemented.
