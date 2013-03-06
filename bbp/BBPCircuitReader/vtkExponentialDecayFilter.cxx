@@ -59,6 +59,7 @@ double decaycompute(bool first, double avg, double decay, double lasttime, doubl
 vtkExponentialDecayFilter::vtkExponentialDecayFilter()
 {
   this->DecayFactor               = 100.0;
+  this->OneSidedDecay             = 0;
   this->ArrayNamePrefix           = NULL;
   this->LastPointData             = vtkSmartPointer<vtkPointData>::New();
   this->LastUpdateTime            = 0.0;
@@ -137,7 +138,12 @@ void vtkExponentialDecayCompute(vtkExponentialDecayFilter *tdf,
       pv = inData1[t*numComp];
     }
     for (int c=0; c<numComp; ++c) {
-      *outData++ = static_cast<T>(decaycompute(first, pv, decay, lasttime, thistime, vv));
+      if (tdf->GetOneSidedDecay() && vv>pv) {
+        *outData++ = static_cast<T>(vv);
+      }
+      else {
+        *outData++ = static_cast<T>(decaycompute(first, pv, decay, lasttime, thistime, vv));
+      }
     }
   }
   output->SetNumberOfTuples(N);

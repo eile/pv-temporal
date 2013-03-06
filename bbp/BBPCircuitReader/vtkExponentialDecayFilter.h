@@ -42,6 +42,11 @@ public:
   vtkGetStringMacro(ArrayNamePrefix); 
 
   // Description:
+  vtkSetMacro(OneSidedDecay, int);
+  vtkGetMacro(OneSidedDecay, int);
+  vtkBooleanMacro(OneSidedDecay, int);
+
+  // Description:
   // Get the number of point or cell arrays available in the input.
   int GetNumberOfPointArrays();
 
@@ -76,6 +81,7 @@ protected:
 
   // internal variables
   bool   FirstIteration;
+  int    OneSidedDecay;
   double DecayFactor;
   char  *ArrayNamePrefix;
 
