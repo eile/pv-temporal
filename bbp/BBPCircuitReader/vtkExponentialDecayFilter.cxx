@@ -34,7 +34,8 @@ PURPOSE.  See the above copyright notice for more information.
 #include "vtkPolyData.h"
 #include "vtkUnstructuredGrid.h"
 #include "vtkDataArraySelection.h"
-
+#include "vtkMath.h"
+//
 #include <vector>
 #include <algorithm>
 #include <functional>
@@ -42,28 +43,27 @@ PURPOSE.  See the above copyright notice for more information.
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkExponentialDecayFilter);
 //----------------------------------------------------------------------------
-double decaycompute(bool first, double avg, double decay, double lasttime, double thistime, double value) 
+double decaycompute(double avg, double decay, double lasttime, double thistime, double value) 
 {
-  if (!first)
-  {
-    double alpha = 1.0 - 1.0/exp(decay*abs(thistime-lasttime));
-    avg += alpha*(value - avg);
-  }
-  else
-  {
-    avg = value;
-  }
+  double alpha = 1.0 - 1.0/exp(decay*abs(thistime-lasttime));
+  avg += alpha*(value - avg);
   return avg;
 }
 //----------------------------------------------------------------------------
 vtkExponentialDecayFilter::vtkExponentialDecayFilter()
 {
   this->DecayFactor               = 100.0;
-  this->OneSidedDecay             = 0;
+  this->HighFrequencyResponse     = 0;
+  this->HighFrequencyDelta        = 20.0;
   this->ArrayNamePrefix           = NULL;
   this->LastPointData             = vtkSmartPointer<vtkPointData>::New();
   this->LastUpdateTime            = 0.0;
   this->FirstIteration            = true;
+  this->OutputAbsoluteValue       = 1;
+  this->ClampAndNormalizeOutput   = 1;
+  this->NormalizedRange[0] = -2;
+  this->NormalizedRange[1] =  2;
+
   this->SetNumberOfInputPorts(1);
   this->SetNumberOfOutputPorts(1);
   this->PointDataArraySelection   = vtkSmartPointer<vtkDataArraySelection>::New();
@@ -126,6 +126,11 @@ void vtkExponentialDecayCompute(vtkExponentialDecayFilter *tdf,
   if (arrays[1]) {
     inData1 = static_cast<T*>(arrays[1]->GetVoidPointer(0));
   }
+  bool    HFR = tdf->GetHighFrequencyResponse();
+  double  HFD = tdf->GetHighFrequencyDelta();
+  bool    ABS = tdf->GetOutputAbsoluteValue();
+  bool    NOR = tdf->GetClampAndNormalizeOutput();
+  double *NRM = tdf->GetNormalizedRange();
   //
   vtkIdType N = arrays[0]->GetNumberOfTuples();
   for (vtkIdType t=0; t<N; ++t)
@@ -138,11 +143,19 @@ void vtkExponentialDecayCompute(vtkExponentialDecayFilter *tdf,
       pv = inData1[t*numComp];
     }
     for (int c=0; c<numComp; ++c) {
-      if (tdf->GetOneSidedDecay() && vv>pv) {
-        *outData++ = static_cast<T>(vv);
+      double temp;
+      if (first || (HFR && abs(vv)>HFD)) {
+        temp = ABS ? (vv) : static_cast<T>(vv);
       }
       else {
-        *outData++ = static_cast<T>(decaycompute(first, pv, decay, lasttime, thistime, vv));
+        temp = decaycompute(pv, decay, lasttime, thistime, vv);
+        temp = ABS ? abs(temp) : temp;
+      }
+      if (NRM) {
+        *outData++ = vtkMath::ClampAndNormalizeValue(temp, NRM);
+      }
+      else {
+        *outData++ = static_cast<T>(temp);
       }
     }
   }

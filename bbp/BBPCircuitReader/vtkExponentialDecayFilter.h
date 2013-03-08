@@ -42,9 +42,30 @@ public:
   vtkGetStringMacro(ArrayNamePrefix); 
 
   // Description:
-  vtkSetMacro(OneSidedDecay, int);
-  vtkGetMacro(OneSidedDecay, int);
-  vtkBooleanMacro(OneSidedDecay, int);
+  // when HighFrequencyResponse is enabled and diffential value is larger than HighFrequencyDelta, 
+  // the decay function is squashed and the moving average snaps to the incoming data. 
+  // When the difference is smaller, the decay is applied as expected. 
+  // The reason for this is to alow sharp spikes in value to be tracked withuot smothing, but apply a slower decay.
+  // Experimental feaure subject to change
+  vtkSetMacro(HighFrequencyDelta, double);
+  vtkGetMacro(HighFrequencyDelta, double);
+  vtkBooleanMacro(HighFrequencyDelta, double);
+
+  // Description:
+  vtkSetMacro(HighFrequencyResponse, int);
+  vtkGetMacro(HighFrequencyResponse, int);
+  vtkBooleanMacro(HighFrequencyResponse, int);
+
+  vtkSetMacro(ClampAndNormalizeOutput, int);
+  vtkGetMacro(ClampAndNormalizeOutput, int);
+  vtkBooleanMacro(ClampAndNormalizeOutput, int);
+
+  vtkSetVector2Macro(NormalizedRange,double);
+  vtkGetVectorMacro(NormalizedRange,double,2);
+
+  vtkSetMacro(OutputAbsoluteValue, int);
+  vtkGetMacro(OutputAbsoluteValue, int);
+  vtkBooleanMacro(OutputAbsoluteValue, int);
 
   // Description:
   // Get the number of point or cell arrays available in the input.
@@ -81,7 +102,11 @@ protected:
 
   // internal variables
   bool   FirstIteration;
-  int    OneSidedDecay;
+  double HighFrequencyDelta;
+  int    HighFrequencyResponse;
+  int    OutputAbsoluteValue;
+  int    ClampAndNormalizeOutput;
+  double NormalizedRange[2];
   double DecayFactor;
   char  *ArrayNamePrefix;
 

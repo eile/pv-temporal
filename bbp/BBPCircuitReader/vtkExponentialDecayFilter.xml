@@ -53,14 +53,56 @@
       </StringVectorProperty>
 
       <IntVectorProperty
-        name="OneSidedDecay"
-        command="SetOneSidedDecay"
+        name="HighFrequencyResponse"
+        command="SetHighFrequencyResponse"
         number_of_elements="1"
         animateable="1"
         default_values="1" >
         <BooleanDomain name="bool"/>
         <Documentation>
           When set, the filter will only decay on the +ve or -ve side
+        </Documentation>
+      </IntVectorProperty>
+
+      <DoubleVectorProperty
+         name="HighFrequencyDelta"
+         command="SetHighFrequencyDelta"
+         number_of_elements="1"
+         default_values="2.0"
+         label="Impulse ref">
+        <DoubleRangeDomain name="range" min="-1000" max="1000.0"/>
+      </DoubleVectorProperty>
+
+      <IntVectorProperty
+        name="ClampAndNormalizeOutput"
+        command="SetClampAndNormalizeOutput"
+        number_of_elements="1"
+        animateable="1"
+        default_values="1" >
+        <BooleanDomain name="bool"/>
+        <Documentation>
+          When set, the filter will output values clamped and normalized to {0.0, 1.0} within {range[0], range[1]}
+        </Documentation>
+      </IntVectorProperty>
+
+      <DoubleVectorProperty
+         name="NormalizedRange"
+         command="SetNormalizedRange"
+         number_of_elements="2"
+         default_values="0.0 2.0"
+         label="Normalize range">
+        <DoubleRangeDomain name="range"/>
+      </DoubleVectorProperty>
+
+      <IntVectorProperty
+        name="OutputAbsoluteValue"
+        command="SetOutputAbsoluteValue"
+        number_of_elements="1"
+        animateable="1"
+        default_values="1" >
+        <BooleanDomain name="bool"/>
+        <Documentation>
+          When set, the filter will produce abs() values 
         </Documentation>
       </IntVectorProperty>
 
