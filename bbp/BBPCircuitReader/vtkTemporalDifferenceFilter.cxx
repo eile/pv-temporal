@@ -231,22 +231,24 @@ int vtkTemporalDifferenceFilter::RequestInformation (
 
   vtkDataSet *inData = vtkDataSet::SafeDownCast(inInfo->Get(vtkDataObject::DATA_OBJECT()));
   vtkPointData *pd = inData->GetPointData();
-  //
-  // when information is regenreated, the arrays might change (bah!)
-  //
-  vtkSmartPointer<vtkDataArraySelection> TempArraySelection = vtkSmartPointer<vtkDataArraySelection>::New();
-  for (int i=0; i<pd->GetNumberOfArrays(); i++) {
-    const char *name = pd->GetArray(i)->GetName();
-    TempArraySelection->AddArray(name);
-    if (this->PointDataArraySelection->ArrayIsEnabled(name)) {
-      TempArraySelection->EnableArray(name);
-    }
-    else {
-      TempArraySelection->DisableArray(name);
-    }
-  }
-  this->PointDataArraySelection = TempArraySelection;
 
+  //
+  // when information is regenerated, the arrays might change (bah!)
+  //
+  if (pd->GetNumberOfArrays()>0) {
+    vtkSmartPointer<vtkDataArraySelection> TempArraySelection = vtkSmartPointer<vtkDataArraySelection>::New();
+    for (int i=0; i<pd->GetNumberOfArrays(); i++) {
+      const char *name = pd->GetArray(i)->GetName();
+      TempArraySelection->AddArray(name);
+      if (this->PointDataArraySelection->ArrayIsEnabled(name)) {
+        TempArraySelection->EnableArray(name);
+      }
+      else {
+        TempArraySelection->DisableArray(name);
+      }
+    }
+    this->PointDataArraySelection->CopySelections(TempArraySelection);
+  }
   return 1;
 }
 //----------------------------------------------------------------------------
