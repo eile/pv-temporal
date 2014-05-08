@@ -501,12 +501,13 @@ vtkDataSet *vtkTemporalDifferenceFilter::DifferenceDataSet(vtkDataSet *in1, vtkD
     output->GetPointData()->AddArray(outarray);
     outarray->FastDelete();
   }
-
+/*
   if (in1->GetInformation()->Has(vtkDataObject::DATA_GEOMETRY_UNMODIFIED()) &&
     in2->GetInformation()->Has(vtkDataObject::DATA_GEOMETRY_UNMODIFIED()))
   {
     output->GetInformation()->Set(vtkDataObject::DATA_GEOMETRY_UNMODIFIED(),1);
   }
+  */
   return output;
 }
 //----------------------------------------------------------------------------
@@ -531,11 +532,12 @@ int vtkTemporalDifferenceFilter::RequestData(
     vtkDataSet* data0 = vtkDataSet::SafeDownCast(inData->GetBlock(0));
     // Do a diff, with a NULL second dataset to create the correct delta_ arrays
     outData = this->DifferenceDataSet(data0, NULL, 0.0);
-
+/*
     if (data0->GetInformation()->Has(vtkDataObject::DATA_GEOMETRY_UNMODIFIED()))
     {
       outData->GetInformation()->Set(vtkDataObject::DATA_GEOMETRY_UNMODIFIED(),1);
     }
+*/
     outInfo->Set(vtkDataObject::DATA_OBJECT(),outData);
   }
   else

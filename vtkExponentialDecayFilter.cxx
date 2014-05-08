@@ -241,11 +241,12 @@ vtkDataSet *vtkExponentialDecayFilter::DecayDataSet(vtkDataSet *in1, double time
     }
   }
 
-
+/*
   if (in1->GetInformation()->Has(vtkDataObject::DATA_GEOMETRY_UNMODIFIED()))
   {
     output->GetInformation()->Set(vtkDataObject::DATA_GEOMETRY_UNMODIFIED(),1);
   }
+  */
   return output;
 }
 //----------------------------------------------------------------------------
@@ -267,10 +268,12 @@ int vtkExponentialDecayFilter::RequestData(
   // Do a diff, with a NULL second dataset to create the correct delta_ arrays
   outData = this->DecayDataSet(data0, upTime);
 
+/*
   if (data0->GetInformation()->Has(vtkDataObject::DATA_GEOMETRY_UNMODIFIED()))
   {
     outData->GetInformation()->Set(vtkDataObject::DATA_GEOMETRY_UNMODIFIED(),1);
   }
+  */
   outInfo->Set(vtkDataObject::DATA_OBJECT(),outData);
 
   // stamp this new dataset with a time key
