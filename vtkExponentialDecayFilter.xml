@@ -130,6 +130,10 @@
         </ArraySelectionDomain>
       </StringVectorProperty>
       
+      <Hints>
+        <ShowInMenu category="Temporal" />
+      </Hints>
+
       <!-- End vtkExponentialDecayFilter -->
     </SourceProxy>
 

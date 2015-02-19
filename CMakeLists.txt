@@ -73,9 +73,6 @@ ADD_PARAVIEW_PLUGIN(
     ${BBP_IFACE}
 
   GUI_SOURCES
-
-  GUI_RESOURCE_FILES
-    ${XML_PATH}/pv_temporal_Filters.xml
 )
 
 #--------------------------------------------------
