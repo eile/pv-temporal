@@ -32,11 +32,6 @@ include(vtkModuleAPI)
 include(vtkModuleMacros)
 include(ParaViewMacros)
 
-# --------------------------------------------------------------
-# Find Qt4, will be picked up with paraview normally
-# --------------------------------------------------------------
-find_package(Qt4)
-
 # --------------------------------------------------
 # Plugin config
 # --------------------------------------------------
