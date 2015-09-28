@@ -1,4 +1,4 @@
-project(pv-temporal)
+project(pv_temporal)
 cmake_minimum_required(VERSION 2.8)
 
 # --------------------------------------------------------------
@@ -17,10 +17,19 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+set (${PROJECT_NAME}_PACKAGE_VERSION 0)
+set (${PROJECT_NAME}_PACKAGE_VERSION_MAJOR 1)
+set (${PROJECT_NAME}_PACKAGE_VERSION_MINOR 0)
+
 # --------------------------------------------------------------
 # Plugin path
 # --------------------------------------------------------------
 get_filename_component(PLUGIN_PATH ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
+
+#--------------------------------------------------
+# Location of cmake files
+#--------------------------------------------------
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # --------------------------------------------------------------
 # Find ParaView
@@ -79,8 +88,9 @@ TARGET_LINK_LIBRARIES(${PLUGIN_NAME}
 # todo
 )
 
+set(pv_temporal_INCLUDES_BUILD_TIME ${CMAKE_CURRENT_SOURCE_DIR})
 
-return()
+include(CMakeInstallation)
 
 #--------------------------------------------------
 # Install

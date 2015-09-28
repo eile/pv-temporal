@@ -1,0 +1,38 @@
+#-----------------------------------------------------------------------------
+# Config file for compiling against build directory
+#-----------------------------------------------------------------------------
+GET_FILENAME_COMPONENT (SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+#-----------------------------------------------------------------------------
+# User Options
+#-----------------------------------------------------------------------------
+set (pv_temporal_BUILD_SHARED_LIBS    @BUILD_SHARED_LIBS@)
+
+#-----------------------------------------------------------------------------
+# Dependencies
+#-----------------------------------------------------------------------------
+IF(pv_temporal_ENABLE_PARALLEL)
+#  SET(pv_temporal_MPI_C_INCLUDE_PATH "@MPI_C_INCLUDE_PATH@")
+#  SET(pv_temporal_MPI_C_LIBRARIES    "@MPI_C_LIBRARIES@")
+ENDIF(pv_temporal_ENABLE_PARALLEL)
+
+#-----------------------------------------------------------------------------
+# Directories
+#-----------------------------------------------------------------------------
+set (pv_temporal_INCLUDE_DIR "@pv_temporal_INCLUDES_BUILD_TIME@" "${pv_temporal_MPI_C_INCLUDE_PATH}" )
+
+#-----------------------------------------------------------------------------
+# Version Strings
+#-----------------------------------------------------------------------------
+set (pv_temporal_VERSION_STRING @pv_temporal_VERSION_STRING@)
+set (pv_temporal_VERSION_MAJOR  @pv_temporal_VERSION_MAJOR@)
+set (pv_temporal_VERSION_MINOR  @pv_temporal_VERSION_MINOR@)
+
+#-----------------------------------------------------------------------------
+# Don't include targets if this file is being picked up by another
+# project which has already build it as a subproject
+#-----------------------------------------------------------------------------
+if (NOT TARGET "@PROJECT_NAME@")
+  include (${SELF_DIR}/@PROJECT_NAME@-targets.cmake)
+  set (pv_temporal_LIBRARIES "@${PROJECT_NAME}_LIBRARIES_TO_EXPORT@")
+endif (NOT TARGET "@PROJECT_NAME@")
