@@ -11,7 +11,7 @@ if(COMMAND cmake_policy)
   cmake_policy(SET CMP0017 NEW)
   cmake_policy(SET CMP0023 OLD)
 endif(COMMAND cmake_policy)
-      
+
 # CMake 2.6+ specific
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -61,9 +61,9 @@ include_directories(
 SET(PLUGIN_NAME pv_temporal)
 ADD_PARAVIEW_PLUGIN(
   ${PLUGIN_NAME}
-  "1.0" 
+  "1.0"
 
-  SERVER_MANAGER_XML     
+  SERVER_MANAGER_XML
     ${XML_PATH}/vtkTemporalDifferenceFilter.xml
     ${XML_PATH}/vtkExponentialDecayFilter.xml
 
@@ -73,7 +73,7 @@ ADD_PARAVIEW_PLUGIN(
 
   SERVER_SOURCES
 
-  GUI_INTERFACES 
+  GUI_INTERFACES
     ${BBP_IFACE}
 
   GUI_SOURCES
@@ -83,24 +83,24 @@ ADD_PARAVIEW_PLUGIN(
 # setup plugin linking
 #--------------------------------------------------
 
-TARGET_LINK_LIBRARIES(${PLUGIN_NAME} 
-  PUBLIC 
+TARGET_LINK_LIBRARIES(${PLUGIN_NAME}
+  PUBLIC
 # todo
 )
 
 set(pv_temporal_INCLUDES_BUILD_TIME ${CMAKE_CURRENT_SOURCE_DIR})
 
-include(CMakeInstallation)
+# include(CMakeInstallation)
 
 #--------------------------------------------------
 # Install
 #--------------------------------------------------
-SET(INSTALL_PATH 
+SET(INSTALL_PATH
   "${CMAKE_INSTALL_PREFIX}/lib/paraview-${PARAVIEW_VERSION_MAJOR}.${PARAVIEW_VERSION_MINOR}"
 )
 
 INSTALL(
-  TARGETS 
+  TARGETS
     ${PLUGIN_NAME}
   DESTINATION ${INSTALL_PATH}
 )
